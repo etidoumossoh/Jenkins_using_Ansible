@@ -1,0 +1,39 @@
+---
+- name: Install Jenkins on EC2 Ubuntu
+  hosts: all
+  remote_user: ubuntu
+  become: yes
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Download Jenkins GPG key
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+
+    - name: Add Jenkins repo
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+        state: present
+        filename: jenkins.list  
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - fontconfig
+          - openjdk-17-jre
+        state: present
+
+    - name: Install Jenkins
+      ansible.builtin.apt:
+        name: jenkins
+        state: present  
+
+    - name: Ensure Jenkins service is running and enabled
+      ansible.builtin.systemd:
+        state: started
+        name: jenkins
+        enabled: yes
